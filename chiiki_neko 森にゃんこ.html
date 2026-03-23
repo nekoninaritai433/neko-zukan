@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>森にゃんこ図鑑</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#c0392b;
+  --red-dark:#8b0000;
+  --red-mid:#d94f3a;
+  --green:#2d6a3f;
+  --green-mid:#3a8c50;
+  --green-light:#5aaa6a;
+  --green-pale:#e8f5ec;
+  --gold:#c8972a;
+  --cream:#fdf8f0;
+  --bg:#f9f3f0;
+  --text:#1a1a1a;
+  --text-soft:#666;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Zen Maru Gothic',-apple-system,sans-serif;background:var(--bg);min-height:100vh;}
+
+/* チェック柄ヘッダー */
+.header{
+  background-color:#8b0000;
+  background-image:
+    repeating-linear-gradient(0deg,transparent,transparent 14px,rgba(34,100,34,0.55) 14px,rgba(34,100,34,0.55) 17px,transparent 17px,transparent 31px,rgba(34,100,34,0.3) 31px,rgba(34,100,34,0.3) 33px),
+    repeating-linear-gradient(90deg,transparent,transparent 14px,rgba(34,100,34,0.55) 14px,rgba(34,100,34,0.55) 17px,transparent 17px,transparent 31px,rgba(34,100,34,0.3) 31px,rgba(34,100,34,0.3) 33px);
+  padding:14px 16px 0;
+  position:sticky;top:0;z-index:50;
+}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.header h1{font-size:19px;font-weight:700;color:#fff;display:flex;align-items:center;gap:7px;text-shadow:0 1px 3px rgba(0,0,0,0.3);}
+.header-right{display:flex;align-items:center;gap:6px;}
+.count-badge{background:var(--gold);color:#fff;font-size:11px;padding:3px 10px;border-radius:99px;font-weight:700;}
+.hdr-btn{font-size:11px;padding:4px 10px;border-radius:99px;border:1.5px solid rgba(255,255,255,0.5);background:transparent;color:#fff;cursor:pointer;font-weight:700;font-family:inherit;}
+
+.search-wrap{padding:0 0 10px;}
+.search-bar{position:relative;}
+.search-bar input{width:100%;padding:10px 14px 10px 38px;border:none;border-radius:12px;background:rgba(255,255,255,0.92);color:var(--text);font-size:14px;font-family:inherit;}
+.search-bar input::placeholder{color:#aaa;}
+.search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--red-mid);font-size:15px;pointer-events:none;}
+
+.tab-row{display:flex;gap:0;background:rgba(0,0,0,0.25);border-radius:10px;padding:3px;margin-bottom:0;}
+.tab-btn{flex:1;font-size:11px;padding:7px 2px;border:none;border-radius:8px;background:transparent;color:rgba(255,255,255,0.65);cursor:pointer;font-weight:700;font-family:inherit;}
+.tab-btn.active{background:#fff;color:var(--red-dark);}
+
+.filter-area{padding:8px 16px 0;background:var(--red-dark);background-image:repeating-linear-gradient(0deg,transparent,transparent 18px,rgba(255,255,255,0.07) 18px,rgba(255,255,255,0.07) 20px),repeating-linear-gradient(90deg,transparent,transparent 18px,rgba(255,255,255,0.07) 18px,rgba(255,255,255,0.07) 20px);}
+.filter-scroll{overflow-x:auto;padding-bottom:8px;}
+.filter-row{display:flex;gap:6px;width:max-content;}
+.filter-btn{flex-shrink:0;font-size:11px;padding:5px 12px;border:1.5px solid rgba(255,255,255,0.4);border-radius:99px;background:transparent;color:#fff;cursor:pointer;white-space:nowrap;font-weight:700;font-family:inherit;}
+
+/* メイン */
+.app{padding:14px 14px 90px;}
+
+/* カードグリッド */
+.cat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.cat-card{background:#fff;border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,0.1);transition:transform 0.12s;}
+.cat-card:active{transform:scale(0.97);}
+.cat-card-photo{width:100%;aspect-ratio:1;background:var(--green-pale);display:flex;align-items:center;justify-content:center;font-size:52px;position:relative;overflow:hidden;}
+.cat-card-photo img{width:100%;height:100%;object-fit:cover;}
+.badge-neu{position:absolute;top:6px;right:6px;background:var(--green-mid);color:#fff;font-size:9px;padding:2px 6px;border-radius:99px;font-weight:700;}
+.badge-seen{position:absolute;top:6px;left:6px;font-size:9px;padding:2px 6px;border-radius:99px;font-weight:700;color:#fff;}
+.photo-count{position:absolute;bottom:5px;right:6px;background:rgba(0,0,0,0.45);color:#fff;font-size:9px;padding:1px 5px;border-radius:99px;}
+.cat-card-body{padding:8px 10px 10px;}
+.cat-card-name-row{display:flex;align-items:center;gap:4px;margin-bottom:5px;flex-wrap:wrap;}
+.cat-card-name{font-size:14px;font-weight:700;color:var(--text);}
+.badge{font-size:10px;padding:2px 6px;border-radius:99px;font-weight:700;}
+.badge-m{background:#1a5fa8;color:#fff;}
+.badge-f{background:#b8285a;color:#fff;}
+.cat-card-area{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:3px 8px;border-radius:99px;color:#fff;font-weight:700;margin-bottom:4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cat-card-color{font-size:10px;color:var(--text-soft);background:#f5f0ea;padding:2px 7px;border-radius:99px;display:inline-block;}
+
+/* エリアセクション */
+.area-section{margin-bottom:18px;}
+.area-section-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:9px 14px;border-radius:12px;color:#fff;font-size:13px;font-weight:700;}
+.area-section-header .ac{margin-left:auto;font-size:11px;opacity:0.9;}
+
+/* 統計 */
+.stats-wrap{padding:4px 0 8px;}
+.stat-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px;}
+.stat-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.07);border-top:4px solid var(--red);}
+.stat-label{font-size:11px;color:var(--red);margin-bottom:4px;font-weight:700;}
+.stat-val{font-size:26px;font-weight:700;color:var(--text);}
+.stat-sub{font-size:11px;color:#bbb;margin-top:2px;}
+.bar-section{background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.07);}
+.bar-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.bar-label{font-size:11px;color:var(--text-soft);width:112px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bar-track{flex:1;background:#f0ede8;border-radius:99px;height:10px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:99px;}
+.bar-num{font-size:11px;color:#bbb;width:24px;text-align:right;flex-shrink:0;}
+
+/* ＋ボタン */
+.add-btn{position:fixed;bottom:28px;right:20px;width:58px;height:58px;border-radius:50%;background:var(--green);color:#fff;border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(45,106,63,0.45);font-family:inherit;}
+
+/* オーバーレイ・シート */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:100;align-items:flex-end;justify-content:center;}
+.overlay.open{display:flex;}
+.sheet{width:100%;max-width:480px;background:var(--cream);border-radius:24px 24px 0 0;padding:20px 20px 44px;max-height:92vh;overflow-y:auto;}
+.sheet-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.sheet-header h2{font-size:17px;font-weight:700;color:var(--red-dark);}
+.sheet-close{background:none;border:none;font-size:24px;cursor:pointer;color:#bbb;}
+
+.form-group{margin-bottom:14px;}
+.form-label{font-size:12px;color:var(--red-dark);margin-bottom:6px;display:block;font-weight:700;}
+.form-input{width:100%;padding:11px 13px;border:2px solid #e8d8d0;border-radius:12px;background:#fff;color:var(--text);font-size:14px;font-family:inherit;}
+.form-input:focus{outline:none;border-color:var(--red-mid);}
+textarea.form-input{min-height:72px;resize:vertical;}
+
+.sex-btn{flex:1;padding:11px 4px;border-radius:12px;border:2px solid #e8d8d0;background:#fff;cursor:pointer;font-size:20px;text-align:center;font-weight:600;font-family:inherit;}
+.sex-btn.sel-m{background:#d0e4f8;border-color:#1a5fa8;}
+.sex-btn.sel-f{background:#f8d0e0;border-color:#b8285a;}
+.sex-btn.sel-u{background:#f5f5f0;border-color:#bbb;}
+
+.area-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:8px;}
+.area-choice{padding:9px 8px;border-radius:11px;border:2px solid #e8d8d0;background:#fff;cursor:pointer;font-size:12px;color:var(--text-soft);font-weight:500;display:flex;align-items:center;gap:6px;line-height:1.3;font-family:inherit;}
+.area-choice.sel{background:#fff5f0;}
+.area-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.place-hint{font-size:11px;color:var(--red-mid);margin-top:4px;}
+
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;}
+.photo-thumb{aspect-ratio:1;border-radius:10px;overflow:hidden;position:relative;background:#f5ede8;display:flex;align-items:center;justify-content:center;}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;}
+.photo-thumb .del-photo{position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.45);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.photo-add-btn{aspect-ratio:1;border-radius:10px;border:2px dashed #e8c8c0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;position:relative;font-size:11px;color:var(--red-mid);font-family:inherit;}
+.photo-add-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:2px solid #f0e0d8;}
+.toggle-label{font-size:14px;color:var(--text);}
+.toggle{width:46px;height:28px;background:#e0d0c8;border-radius:14px;border:none;cursor:pointer;position:relative;transition:background 0.2s;}
+.toggle.on{background:var(--green-mid);}
+.toggle::after{content:'';position:absolute;width:22px;height:22px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2);}
+.toggle.on::after{left:21px;}
+
+.save-btn{width:100%;padding:14px;background:var(--red-dark);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;margin-top:10px;font-family:inherit;}
+.edit-btn{width:100%;padding:12px;background:#f0f0e8;color:var(--text-soft);border:none;border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;margin-top:14px;font-family:inherit;}
+.seen-btn{width:100%;padding:12px;background:var(--green-pale);border:2px solid #a8d8b8;border-radius:14px;font-size:14px;color:var(--green);cursor:pointer;margin-top:6px;font-weight:700;font-family:inherit;}
+.delete-btn{width:100%;padding:13px;background:#c94040;color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;}
+
+.detail-photos{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;}
+.detail-photo{flex-shrink:0;width:140px;height:140px;border-radius:14px;overflow:hidden;background:#f5ede8;display:flex;align-items:center;justify-content:center;font-size:40px;}
+.detail-photo img{width:100%;height:100%;object-fit:cover;}
+.detail-row{display:flex;padding:10px 0;border-bottom:1.5px solid #f0e8e4;}
+.detail-key{font-size:12px;color:var(--red-dark);width:90px;flex-shrink:0;font-weight:700;}
+.detail-val{font-size:13px;color:var(--text);}
+.unseen-warn{background:#fff8e8;border-radius:12px;padding:10px 14px;font-size:12px;color:#9a6000;margin-bottom:14px;font-weight:500;}
+.area-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 7px;border-radius:99px;color:#fff;font-weight:700;white-space:nowrap;}
+.sex-m{background:#1a5fa8;color:#fff;font-size:10px;padding:2px 6px;border-radius:99px;font-weight:700;}
+.sex-f{background:#b8285a;color:#fff;font-size:10px;padding:2px 6px;border-radius:99px;font-weight:700;}
+
+.health-log{margin-top:8px;}
+.health-entry{display:flex;gap:8px;margin-bottom:6px;align-items:flex-start;}
+.health-date{font-size:11px;color:var(--red-mid);white-space:nowrap;padding-top:2px;font-weight:700;}
+.health-text{font-size:13px;color:var(--text);flex:1;}
+.health-input-row{display:flex;gap:6px;margin-top:8px;}
+.health-input-row input{flex:1;}
+.health-input-row button{padding:8px 14px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-weight:700;font-family:inherit;}
+
+.empty{text-align:center;padding:48px 20px;color:#c8a8a0;font-size:14px;line-height:2.2;grid-column:span 2;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <h1>🎄 森にゃんこ図鑑</h1>
+    <div class="header-right">
+      <span class="count-badge" id="count-label">0匹</span>
+      <button class="hdr-btn" onclick="exportData()">出力</button>
+      <label class="hdr-btn">入力<input type="file" accept=".json" onchange="importData(event)" style="display:none;"></label>
+    </div>
+  </div>
+  <div class="search-wrap">
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="名前・エリアで検索..." id="search-input" oninput="render()">
+    </div>
+  </div>
+  <div style="padding:8px 0 10px;">
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="setTab('all',this)">すべて</button>
+      <button class="tab-btn" onclick="setTab('area',this)">場所別</button>
+      <button class="tab-btn" onclick="setTab('sex',this)">♂♀</button>
+      <button class="tab-btn" onclick="setTab('neuter',this)">去勢</button>
+      <button class="tab-btn" onclick="setTab('stats',this)">統計</button>
+    </div>
+  </div>
+  <div id="filter-neuter" style="display:none" class="filter-area">
+    <div class="filter-scroll"><div class="filter-row" id="neuter-filters">
+      <button class="filter-btn" style="background:rgba(255,255,255,0.2)" onclick="setNeuter('all',this)">すべて</button>
+      <button class="filter-btn" onclick="setNeuter('done',this)">済み</button>
+      <button class="filter-btn" onclick="setNeuter('not',this)">未処置</button>
+    </div></div>
+  </div>
+  <div id="filter-sex" style="display:none" class="filter-area">
+    <div class="filter-scroll"><div class="filter-row" id="sex-filters">
+      <button class="filter-btn" style="background:rgba(255,255,255,0.2)" onclick="setSexFilter('all',this)">すべて</button>
+      <button class="filter-btn" onclick="setSexFilter('m',this)">♂ オス</button>
+      <button class="filter-btn" onclick="setSexFilter('f',this)">♀ メス</button>
+      <button class="filter-btn" onclick="setSexFilter('u',this)">不明</button>
+    </div></div>
+  </div>
+  <div id="filter-area" style="display:none" class="filter-area">
+    <div class="filter-scroll"><div class="filter-row" id="area-filters"></div></div>
+  </div>
+</div>
+
+<div class="app">
+  <div id="main-content"></div>
+</div>
+
+<button class="add-btn" onclick="openAdd()">＋</button>
+
+<div class="overlay" id="add-overlay">
+  <div class="sheet">
+    <div class="sheet-header">
+      <h2 id="add-title">猫を追加</h2>
+      <button class="sheet-close" onclick="closeSheet('add-overlay')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">写真（複数枚OK）</label>
+      <div class="photo-grid" id="add-photo-grid"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">名前 *</label>
+      <input type="text" class="form-input" id="f-name" placeholder="例：みけ">
+    </div>
+    <div class="form-group">
+      <label class="form-label">性別</label>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="sex-btn" id="sb-m" onclick="setSex('m')">♂<br><span style="font-size:11px;font-weight:400;">オス</span></button>
+        <button type="button" class="sex-btn" id="sb-f" onclick="setSex('f')">♀<br><span style="font-size:11px;font-weight:400;">メス</span></button>
+        <button type="button" class="sex-btn" id="sb-u" onclick="setSex('u')" style="font-size:13px;">？<br><span style="font-size:11px;font-weight:400;">不明</span></button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">毛色・外見の特徴</label>
+      <input type="text" class="form-input" id="f-color" placeholder="例：白黒・額に黒い模様">
+    </div>
+    <div class="form-group">
+      <label class="form-label">出没エリア</label>
+      <div class="area-grid" id="area-choice-grid"></div>
+      <input type="text" class="form-input" id="f-place" placeholder="詳細メモ（任意）">
+      <p class="place-hint">エリアを選ぶと「場所別」タブで整理されます</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">最終目撃日</label>
+      <input type="date" class="form-input" id="f-seen">
+    </div>
+    <div class="form-group">
+      <label class="form-label">メモ</label>
+      <textarea class="form-input" id="f-memo" placeholder="性格・健康状態など..."></textarea>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label">去勢・避妊済み</span>
+      <button class="toggle" id="f-toggle" onclick="this.classList.toggle('on')"></button>
+    </div>
+    <button class="save-btn" onclick="saveForm()">保存する</button>
+  </div>
+</div>
+
+<div class="overlay" id="detail-overlay">
+  <div class="sheet" id="detail-sheet"></div>
+</div>
+
+<script>
+
+
+var AREAS=[
+  {name:"入り口（カフェくん）",icon:"☕",color:"#d4b84a"},
+  {name:"桜の道",icon:"🌸",color:"#e8a0b4"},
+  {name:"ベンチ",icon:"🪑",color:"#6a9e72"},
+  {name:"コートの道",icon:"🎾",color:"#8ab84a"},
+  {name:"ラテくんの道",icon:"🐈",color:"#c0192c"},
+  {name:"海側（ノラさん）",icon:"🌊",color:"#5ab8d8"},
+  {name:"海側（ヤックル）",icon:"🌊",color:"#5a7090"},
+  {name:"真ん中の広場",icon:"🌿",color:"#d4884a"}
+];
+
+var cats=JSON.parse(localStorage.getItem("neko_v5")||"[]");
+var tab="all",areaFilter="all",neuterFilter="all",sexFilter="all";
+var selArea="",selSex="",newPhotos=[];
+var editIdx=-1; // -1=新規, 0以上=編集
+
+function exportData(){
+  var json=JSON.stringify(cats,null,2);
+  var blob=new Blob([json],{type:"application/json"});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a");
+  a.href=url;
+  a.download="minato_neko_"+new Date().toISOString().slice(0,10)+".json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(e){
+  var file=e.target.files[0];
+  if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      var data=JSON.parse(ev.target.result);
+      if(!Array.isArray(data)){alert("ファイルの形式が正しくありません");return;}
+      if(!confirm("現在のデータに"+data.length+"匹分のデータを追加しますか？（既存のデータは消えません）"))return;
+      var names=cats.map(function(c){return c.name;});
+      var added=0;
+      data.forEach(function(c){
+        if(names.indexOf(c.name)<0){cats.push(c);added++;}
+      });
+      persist();render();
+      alert(added+"匹のデータを追加しました！（重複はスキップ）");
+    }catch(err){alert("読み込みに失敗しました："+err.message);}
+  };
+  reader.readAsText(file);
+  e.target.value="";
+}
+
+function persist(){
+  try{localStorage.setItem("neko_v5",JSON.stringify(cats));}
+  catch(e){alert("保存容量が不足しています。写真を減らしてみてください。");}
+}
+function areaInfo(n){return AREAS.find(function(a){return a.name===n;})||{name:n,icon:"📍",color:"#888"};}
+
+function daysSince(dateStr){
+  if(!dateStr)return null;
+  var d=new Date(dateStr),now=new Date();
+  return Math.floor((now-d)/86400000);
+}
+function seenLabel(dateStr){
+  var d=daysSince(dateStr);
+  if(d===null)return null;
+  if(d===0)return{text:"今日",color:"#2e8e5a"};
+  if(d<=3)return{text:d+"日前",color:"#2e8e5a"};
+  if(d<=7)return{text:d+"日前",color:"#c47d0a"};
+  return{text:d+"日前",color:"#c04a4a"};
+}
+
+function setTab(t,btn){
+  tab=t;areaFilter="all";
+  document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active");});
+  btn.classList.add("active");
+  document.getElementById("filter-neuter").style.display=t==="neuter"?"":"none";
+  document.getElementById("filter-sex").style.display=t==="sex"?"":"none";
+  document.getElementById("filter-area").style.display=t==="area"?"":"none";
+  render();
+}
+function setNeuter(f,btn){
+  neuterFilter=f;
+  document.querySelectorAll("#neuter-filters .filter-btn").forEach(function(b){b.style.background="";b.style.borderColor="";b.style.color="";});
+  btn.style.background="#1D9E75";btn.style.borderColor="#1D9E75";btn.style.color="#fff";
+  render();
+}
+function setSexFilter(f,btn){
+  sexFilter=f;
+  document.querySelectorAll("#sex-filters .filter-btn").forEach(function(b){b.style.background="";b.style.borderColor="";b.style.color="";});
+  btn.style.background="#444";btn.style.borderColor="#444";btn.style.color="#fff";
+  render();
+}
+function buildAreaFilters(){
+  var used=cats.map(function(c){return c.area;}).filter(Boolean);
+  var uniq=AREAS.filter(function(a){return used.indexOf(a.name)>=0;});
+  var el=document.getElementById("area-filters");
+  el.innerHTML="";
+  var allBtn=document.createElement("button");
+  allBtn.className="filter-btn";
+  allBtn.textContent="すべて";
+  if(areaFilter==="all"){allBtn.style.background="#444";allBtn.style.borderColor="#444";allBtn.style.color="#fff";}
+  allBtn.onclick=function(){setAreaFilterVal("all");};
+  el.appendChild(allBtn);
+  uniq.forEach(function(a){
+    var btn=document.createElement("button");
+    btn.className="filter-btn";
+    btn.textContent=a.icon+" "+a.name;
+    if(areaFilter===a.name){btn.style.background=a.color;btn.style.borderColor=a.color;btn.style.color="#fff";}
+    btn.onclick=function(){setAreaFilterVal(a.name);};
+    el.appendChild(btn);
+  });
+}
+function setAreaFilterVal(f){areaFilter=f;buildAreaFilters();render();}
+function setAreaFilter(f,btn){setAreaFilterVal(f);}
+
+function filteredList(){
+  var q=document.getElementById("search-input").value.toLowerCase();
+  return cats.filter(function(c){
+    if(neuterFilter==="done"&&!c.neutered)return false;
+    if(neuterFilter==="not"&&c.neutered)return false;
+    if(sexFilter!=="all"&&(c.sex||"u")!==sexFilter)return false;
+    if(areaFilter!=="all"&&c.area!==areaFilter)return false;
+    if(q&&c.name.toLowerCase().indexOf(q)<0&&(c.area||"").toLowerCase().indexOf(q)<0&&(c.place||"").toLowerCase().indexOf(q)<0)return false;
+    return true;
+  });
+}
+
+function render(){
+  if(tab==="area")buildAreaFilters();
+  document.getElementById("count-label").textContent=cats.length+"匹";
+  var el=document.getElementById("main-content");
+  if(tab==="stats"){renderStats(el);return;}
+  var list=filteredList();
+  if(tab==="area"){
+    var groups={};
+    list.forEach(function(c){var k=c.area||"未分類";if(!groups[k])groups[k]=[];groups[k].push(c);});
+    var ord=AREAS.map(function(a){return a.name;});
+    var sorted=Object.keys(groups).sort(function(a,b){return ord.indexOf(a)-ord.indexOf(b);});
+    if(!sorted.length){el.innerHTML="<div class='empty'>該当する猫がいません</div>";return;}
+    var html="";
+    sorted.forEach(function(n){
+      var info=areaInfo(n);
+      html+="<div class='area-section'><div class='area-section-header' style='background:"+info.color+"'><span>"+info.icon+" "+n+"</span><span class='ac'>"+groups[n].length+"匹</span></div><div class='cat-grid'>";
+      groups[n].forEach(function(c){html+=cardHtml(c);});
+      html+="</div></div>";
+    });
+    el.innerHTML=html;
+  }else{
+    if(!list.length){el.innerHTML="<div class='empty'>まだ猫が登録されていません<br>右下の ＋ から追加しましょう🐾</div>";return;}
+    var html="<div class='cat-grid'>";
+    list.forEach(function(c){html+=cardHtml(c);});
+    html+="</div>";
+    el.innerHTML=html;
+  }
+}
+
+function renderStats(el){
+  var total=cats.length;
+  var males=cats.filter(function(c){return c.sex==="m";}).length;
+  var females=cats.filter(function(c){return c.sex==="f";}).length;
+  var neutered=cats.filter(function(c){return c.neutered;}).length;
+  var pct=total?Math.round(neutered/total*100):0;
+  var areaCounts={};
+  AREAS.forEach(function(a){areaCounts[a.name]=0;});
+  cats.forEach(function(c){if(c.area)areaCounts[c.area]=(areaCounts[c.area]||0)+1;});
+  var areaMax=1;
+  Object.keys(areaCounts).forEach(function(k){if(areaCounts[k]>areaMax)areaMax=areaCounts[k];});
+  var areaRows="";
+  AREAS.forEach(function(a){
+    var n=areaCounts[a.name]||0;
+    areaRows+="<div class='bar-row'><span class='bar-label'>"+a.icon+" "+a.name+"</span><div class='bar-track'><div class='bar-fill' style='width:"+(n/areaMax*100)+"%;background:"+a.color+"'></div></div><span class='bar-num'>"+n+"</span></div>";
+  });
+  el.innerHTML="<div class='stats-wrap'>"+
+    "<div class='stat-cards'>"+
+    "<div class='stat-card'><div class='stat-label'>登録数</div><div class='stat-val'>"+total+"</div><div class='stat-sub'>匹</div></div>"+
+    "<div class='stat-card'><div class='stat-label'>去勢・避妊済み</div><div class='stat-val'>"+neutered+"</div><div class='stat-sub'>"+pct+"% ("+total+"匹中)</div></div>"+
+    "<div class='stat-card'><div class='stat-label'>オス ♂</div><div class='stat-val' style='color:#4a7fc1'>"+males+"</div><div class='stat-sub'>匹</div></div>"+
+    "<div class='stat-card'><div class='stat-label'>メス ♀</div><div class='stat-val' style='color:#c14a7f'>"+females+"</div><div class='stat-sub'>匹</div></div>"+
+    "</div>"+
+    "<div class='bar-section'><div class='bar-title'>エリア別</div>"+areaRows+"</div>"+
+    "</div>";
+}
+
+function cardHtml(c){
+  var idx=cats.indexOf(c);
+  var info=c.area?areaInfo(c.area):null;
+  var photos=c.photos||[];
+  var mainPhoto=photos.length>0?photos[0]:(c.photo||null);
+  var sl=seenLabel(c.seen);
+  var areaColor=info?info.color:"#888";
+  var html="<div class='cat-card' onclick='openDetail("+idx+")'>";
+  html+="<div class='cat-card-photo'>";
+  html+=mainPhoto?"<img src='"+mainPhoto+"'>":"🐱";
+  if(c.neutered)html+="<span class='badge-neu'>去勢済</span>";
+  if(sl)html+="<span class='badge-seen' style='background:"+sl.color+"'>"+sl.text+"</span>";
+  if(photos.length>1)html+="<span class='photo-count'>📷"+photos.length+"</span>";
+  html+="</div>";
+  html+="<div class='cat-card-body'>";
+  html+="<div class='cat-card-name-row'>";
+  html+="<span class='cat-card-name'>"+esc(c.name)+"</span>";
+  if(c.sex==="m")html+="<span class='badge badge-m'>♂</span>";
+  else if(c.sex==="f")html+="<span class='badge badge-f'>♀</span>";
+  html+="</div>";
+  if(info)html+="<div class='cat-card-area' style='background:"+areaColor+"'>"+info.icon+" "+info.name+"</div>";
+  if(c.color)html+="<div class='cat-card-color'>"+esc(c.color)+"</div>";
+  html+="</div>";
+  html+="</div>";
+  return html;
+}
+
+function esc(s){return(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+/* 写真圧縮 */
+function compressPhoto(file,cb){
+  var img=new Image();
+  var url=URL.createObjectURL(file);
+  img.onload=function(){
+    var MAX=600,w=img.width,h=img.height;
+    if(w>h){if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}}else{if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}}
+    var canvas=document.createElement("canvas");
+    canvas.width=w;canvas.height=h;
+    canvas.getContext("2d").drawImage(img,0,0,w,h);
+    cb(canvas.toDataURL("image/jpeg",0.7));
+    URL.revokeObjectURL(url);
+  };
+  img.src=url;
+}
+
+/* 写真グリッド描画（共通） */
+function renderPhotoGrid(gridId, photos, removeFunc, addFunc){
+  var g=document.getElementById(gridId);
+  if(!g)return;
+  var html="";
+  photos.forEach(function(p,i){
+    html+="<div class='photo-thumb'><img src='"+p+"'><button class='del-photo' onclick='"+removeFunc+"("+i+")'>✕</button></div>";
+  });
+  html+="<div class='photo-add-btn'><input type='file' accept='image/*' multiple onchange='"+addFunc+"(event)'><span style='font-size:22px'>📷</span><span>追加</span></div>";
+  g.innerHTML=html;
+}
+
+/* 追加フォーム */
+function onPhotos(e){
+  Array.from(e.target.files).forEach(function(file){
+    compressPhoto(file,function(data){newPhotos.push(data);renderPhotoGrid("add-photo-grid",newPhotos,"removePhoto","onPhotos");});
+  });
+}
+function removePhoto(i){newPhotos.splice(i,1);renderPhotoGrid("add-photo-grid",newPhotos,"removePhoto","onPhotos");}
+
+function buildAreaChoices(gridId, currentSel, onClickFn){
+  var el=document.getElementById(gridId);
+  if(!el)return;
+  el.innerHTML="";
+  AREAS.forEach(function(a){
+    var sel=currentSel===a.name;
+    var div=document.createElement("div");
+    div.className="area-choice"+(sel?" sel":"");
+    div.style.borderColor=sel?a.color:"#e8e8e8";
+    div.innerHTML="<div class='area-dot' style='background:"+a.color+"'></div>"+a.icon+" "+a.name;
+    div.onclick=(function(name){return function(){window[onClickFn](name);};})(a.name);
+    el.appendChild(div);
+  });
+}
+
+function selectArea(n){selArea=selArea===n?"":n;buildAreaChoices("area-choice-grid",selArea,"selectArea");}
+function setSex(v){
+  selSex=selSex===v?"":v;
+  ["m","f","u"].forEach(function(x){document.getElementById("sb-"+x).className="sex-btn"+(selSex===x?" sel-"+x:"");});
+}
+
+/* フォームを開く（新規 or 編集） */
+function openAdd(){
+  editIdx=-1;
+  newPhotos=[];selArea="";selSex="";
+  ["f-name","f-color","f-place","f-memo"].forEach(function(id){document.getElementById(id).value="";});
+  document.getElementById("f-seen").value=new Date().toISOString().slice(0,10);
+  document.getElementById("f-toggle").classList.remove("on");
+  ["m","f","u"].forEach(function(x){document.getElementById("sb-"+x).className="sex-btn";});
+  document.getElementById("add-title").textContent="猫を追加";
+  renderPhotoGrid("add-photo-grid",newPhotos,"removePhoto","onPhotos");
+  buildAreaChoices("area-choice-grid",selArea,"selectArea");
+  document.getElementById("add-overlay").classList.add("open");
+}
+
+function openEdit(i){
+  var c=cats[i];
+  editIdx=i;
+  newPhotos=(c.photos||[]).slice();
+  selArea=c.area||"";
+  selSex=c.sex||"";
+  document.getElementById("f-name").value=c.name||"";
+  document.getElementById("f-color").value=c.color||"";
+  document.getElementById("f-place").value=c.place||"";
+  document.getElementById("f-seen").value=c.seen||"";
+  document.getElementById("f-memo").value=c.memo||"";
+  var tog=document.getElementById("f-toggle");
+  if(c.neutered)tog.classList.add("on"); else tog.classList.remove("on");
+  ["m","f","u"].forEach(function(x){document.getElementById("sb-"+x).className="sex-btn"+(selSex===x?" sel-"+x:"");});
+  document.getElementById("add-title").textContent="編集";
+  renderPhotoGrid("add-photo-grid",newPhotos,"removePhoto","onPhotos");
+  buildAreaChoices("area-choice-grid",selArea,"selectArea");
+  closeSheet("detail-overlay");
+  document.getElementById("add-overlay").classList.add("open");
+}
+
+function saveForm(){
+  var name=document.getElementById("f-name").value.trim();
+  if(!name){alert("名前を入力してください");return;}
+  var data={
+    name:name,
+    photos:newPhotos.slice(),
+    sex:selSex,
+    color:document.getElementById("f-color").value.trim(),
+    area:selArea,
+    place:document.getElementById("f-place").value.trim(),
+    seen:document.getElementById("f-seen").value,
+    memo:document.getElementById("f-memo").value.trim(),
+    neutered:document.getElementById("f-toggle").classList.contains("on"),
+  };
+  if(editIdx>=0){
+    data.health=cats[editIdx].health||[];
+    data.date=cats[editIdx].date;
+    cats[editIdx]=data;
+  }else{
+    data.health=[];
+    data.date=new Date().toLocaleDateString("ja-JP");
+    cats.push(data);
+  }
+  persist();closeSheet("add-overlay");render();
+}
+
+function closeSheet(id){document.getElementById(id).classList.remove("open");}
+
+/* 詳細 */
+function closeDetail(){closeSheet("detail-overlay");}
+function openDetail(i){
+  var c=cats[i];
+  var info=c.area?areaInfo(c.area):null;
+  var photos=c.photos||[];
+  var sl=seenLabel(c.seen);
+  var ds=document.getElementById("detail-sheet");
+  ds.innerHTML="";
+
+  // header
+  var hdr=document.createElement("div");hdr.className="sheet-header";
+  var h2=document.createElement("h2");h2.textContent=c.name;
+  var cls=document.createElement("button");cls.className="sheet-close";cls.textContent="✕";cls.onclick=closeDetail;
+  hdr.appendChild(h2);hdr.appendChild(cls);ds.appendChild(hdr);
+
+  // warning
+  if(sl&&daysSince(c.seen)>7){
+    var w=document.createElement("div");w.className="unseen-warn";
+    w.textContent="⚠️ 最終目撃から"+daysSince(c.seen)+"日経過しています";ds.appendChild(w);
+  }
+
+  // photos
+  var ph=document.createElement("div");ph.className="detail-photos";
+  if(photos.length){photos.forEach(function(p){var d=document.createElement("div");d.className="detail-photo";var img=document.createElement("img");img.src=p;d.appendChild(img);ph.appendChild(d);});}
+  else{var d=document.createElement("div");d.className="detail-photo";d.textContent="🐱";ph.appendChild(d);}
+  ds.appendChild(ph);
+
+  function addRow(key,valHtml){
+    var row=document.createElement("div");row.className="detail-row";
+    var k=document.createElement("span");k.className="detail-key";k.textContent=key;
+    var v=document.createElement("span");v.className="detail-val";v.innerHTML=valHtml;
+    row.appendChild(k);row.appendChild(v);ds.appendChild(row);
+  }
+
+  if(c.sex)addRow("性別",c.sex==="m"?"<span class='sex-m'>♂ オス</span>":"<span class='sex-f'>♀ メス</span>");
+  if(c.color)addRow("毛色・外見",esc(c.color));
+  if(info)addRow("エリア","<span class='area-badge' style='background:"+info.color+"'>"+info.icon+" "+info.name+"</span>");
+  if(c.place)addRow("詳細メモ",esc(c.place));
+  addRow("去勢・避妊",c.neutered?"✅ 済み":"未処置");
+  if(c.seen)addRow("最終目撃",c.seen+(sl?" <span style='color:"+sl.color+";font-size:11px'>（"+sl.text+"）</span>":""));
+  if(c.memo)addRow("メモ",esc(c.memo));
+
+  // health log
+  var healthRow=document.createElement("div");healthRow.className="detail-row";healthRow.style.flexDirection="column";
+  var hkey=document.createElement("span");hkey.className="detail-key";hkey.style.marginBottom="6px";hkey.textContent="体調・けが記録";
+  var hlog=document.createElement("div");hlog.className="health-log";hlog.id="hlog-"+i;
+  (c.health||[]).forEach(function(h){
+    var e=document.createElement("div");e.className="health-entry";
+    var d=document.createElement("span");d.className="health-date";d.textContent=h.date;
+    var t=document.createElement("span");t.className="health-text";t.textContent=h.text;
+    e.appendChild(d);e.appendChild(t);hlog.appendChild(e);
+  });
+  if(!(c.health||[]).length){var none=document.createElement("span");none.style.fontSize="12px";none.style.color="#bbb";none.textContent="記録なし";hlog.appendChild(none);}
+  var hinrow=document.createElement("div");hinrow.className="health-input-row";
+  var hinput=document.createElement("input");hinput.className="form-input";hinput.id="hinput-"+i;hinput.placeholder="例：右目やや炎症";hinput.style.fontSize="13px";
+  var hbtn=document.createElement("button");hbtn.textContent="追加";hbtn.onclick=(function(idx){return function(){addHealth(idx);};})(i);
+  hinrow.appendChild(hinput);hinrow.appendChild(hbtn);
+  healthRow.appendChild(hkey);healthRow.appendChild(hlog);healthRow.appendChild(hinrow);
+  ds.appendChild(healthRow);
+
+  if(c.date)addRow("登録日",c.date);
+
+  // buttons
+  var editBtn=document.createElement("button");editBtn.className="edit-btn";editBtn.textContent="✏️ 編集する";editBtn.onclick=(function(idx){return function(){openEdit(idx);};})(i);ds.appendChild(editBtn);
+  var seenBtn=document.createElement("button");seenBtn.className="seen-btn";seenBtn.textContent="📅 今日見た！";seenBtn.onclick=(function(idx){return function(){markSeen(idx);};})(i);ds.appendChild(seenBtn);
+  var delBtn=document.createElement("button");delBtn.className="delete-btn";delBtn.textContent="この猫を削除する";delBtn.onclick=(function(idx){return function(){deleteCat(idx);};})(i);ds.appendChild(delBtn);
+
+  document.getElementById("detail-overlay").classList.add("open");
+}
+
+function markSeen(i){cats[i].seen=new Date().toISOString().slice(0,10);persist();openDetail(i);render();}
+
+function addHealth(i){
+  var inp=document.getElementById("hinput-"+i);
+  var txt=inp.value.trim();if(!txt)return;
+  if(!cats[i].health)cats[i].health=[];
+  cats[i].health.unshift({date:new Date().toLocaleDateString("ja-JP"),text:txt});
+  persist();inp.value="";
+  var el=document.getElementById("hlog-"+i);
+  var html="";
+  cats[i].health.forEach(function(h){html+="<div class='health-entry'><span class='health-date'>"+h.date+"</span><span class='health-text'>"+esc(h.text)+"</span></div>";});
+  el.innerHTML=html;
+}
+
+function deleteCat(i){
+  if(!confirm(cats[i].name+"を削除しますか？"))return;
+  cats.splice(i,1);persist();closeSheet("detail-overlay");render();
+}
+
+document.querySelectorAll(".overlay").forEach(function(el){
+  el.addEventListener("click",function(e){if(e.target===el)el.classList.remove("open");});
+});
+
+render();
+
+
+</script>
+</body>
+</html>
