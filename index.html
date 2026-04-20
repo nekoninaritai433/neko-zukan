@@ -347,6 +347,7 @@ textarea.form-input{min-height:72px;resize:vertical;}
 var DB_NAME = "nekoZukanDB";
 var DB_VERSION = 1;
 var db = null;
+var photoCache = {};
 
 function openDB(cb){
   if(db){cb(db);return;}
@@ -364,78 +365,59 @@ function openDB(cb){
 function savePhoto(id, data, cb){
   openDB(function(d){
     if(!d){cb&&cb();return;}
-    var tx = d.transaction("photos","readwrite");
-    tx.objectStore("photos").put({id:id, data:data});
-    tx.oncomplete = function(){cb&&cb();};
+    try{
+      var tx = d.transaction("photos","readwrite");
+      tx.objectStore("photos").put({id:id, data:data});
+      tx.oncomplete = function(){cb&&cb();};
+      tx.onerror = function(){cb&&cb();};
+    }catch(e){cb&&cb();}
   });
 }
 
 function getPhoto(id, cb){
+  if(photoCache[id]){cb(photoCache[id]);return;}
   openDB(function(d){
     if(!d){cb(null);return;}
-    var tx = d.transaction("photos","readonly");
-    var req = tx.objectStore("photos").get(id);
-    req.onsuccess = function(){cb(req.result?req.result.data:null);};
-    req.onerror = function(){cb(null);};
+    try{
+      var tx = d.transaction("photos","readonly");
+      var req = tx.objectStore("photos").get(id);
+      req.onsuccess = function(){
+        var data=req.result?req.result.data:null;
+        if(data)photoCache[id]=data;
+        cb(data);
+      };
+      req.onerror = function(){cb(null);};
+    }catch(e){cb(null);}
   });
 }
 
-function deletePhoto(id, cb){
-  openDB(function(d){
-    if(!d){cb&&cb();return;}
-    var tx = d.transaction("photos","readwrite");
-    tx.objectStore("photos").delete(id);
-    tx.oncomplete = function(){cb&&cb();};
-  });
-}
+function isPhotoId(s){return s&&typeof s==="string"&&s.indexOf("photo_")===0;}
 
-function deleteAllPhotosForCat(catName, cb){
-  openDB(function(d){
-    if(!d){cb&&cb();return;}
-    var tx = d.transaction("photos","readwrite");
-    var store = tx.objectStore("photos");
-    var req = store.openCursor();
-    req.onsuccess = function(e){
-      var cursor = e.target.result;
-      if(cursor){
-        if(cursor.key.indexOf("cat_"+catName+"_")===0){
-          cursor.delete();
-        }
-        cursor.continue();
-      }
-    };
-    tx.oncomplete = function(){cb&&cb();};
-  });
-}
-
-function generatePhotoId(prefix, index){
-  return prefix+"_"+index+"_"+Date.now();
-}
-
-/* photo loading cache */
-var photoCache = {};
-
-function loadPhotoIntoCache(id, cb){
-  if(photoCache[id]){cb(photoCache[id]);return;}
-  getPhoto(id, function(data){
-    if(data)photoCache[id]=data;
-    cb(data);
-  });
-}
-
-/* Load all photos for rendering - fills img elements by data-photoid */
 function loadPhotosInPage(){
   document.querySelectorAll("img[data-photoid]").forEach(function(img){
     var id = img.getAttribute("data-photoid");
     if(!id)return;
     if(photoCache[id]){img.src=photoCache[id];return;}
-    loadPhotoIntoCache(id, function(data){
+    getPhoto(id, function(data){
       if(data){
-        // find all imgs with this id and update them
         document.querySelectorAll("img[data-photoid='"+id+"']").forEach(function(el){
           el.src=data;
         });
       }
+    });
+  });
+}
+
+function preloadAllPhotos(cb){
+  var ids=[];
+  cats.forEach(function(c){(c.photos||[]).forEach(function(p){if(isPhotoId(p)&&!photoCache[p])ids.push(p);});});
+  diaries.forEach(function(d){(d.photos||[]).forEach(function(p){if(isPhotoId(p)&&!photoCache[p])ids.push(p);});});
+  if(!ids.length){cb();return;}
+  var done=0;
+  ids.forEach(function(id){
+    getPhoto(id,function(data){
+      done++;
+      if(done===ids.length)cb();
     });
   });
 }
@@ -918,7 +900,6 @@ function compressPhoto(file,cb){
   img.src=url;
 }
 
-function isPhotoId(s){return s&&s.indexOf("photo_")===0;}
 
 function getPhotoSrc(idOrData, cb){
   if(!idOrData){cb("");return;}
