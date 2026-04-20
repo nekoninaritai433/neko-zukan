@@ -481,7 +481,11 @@ function importData(e){
       var dates=diaries.map(function(d){return d.date;});
       var dAdded=0;
       diaryData.forEach(function(d){if(dates.indexOf(d.date)<0){diaries.push(d);dAdded++;}});
-      persist();persistDiary();openDB(function(){render();});
+      persist();persistDiary();openDB(function(){
+  render();
+  setTimeout(loadPhotosInPage, 100);
+  setTimeout(loadPhotosInPage, 500);
+});
       alert(added+"匹・日記"+dAdded+"件を追加しました！");
     }catch(err){alert("読み込みに失敗しました："+err.message);}
   };
