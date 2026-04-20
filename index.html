@@ -428,8 +428,14 @@ function loadPhotosInPage(){
   document.querySelectorAll("img[data-photoid]").forEach(function(img){
     var id = img.getAttribute("data-photoid");
     if(!id)return;
+    if(photoCache[id]){img.src=photoCache[id];return;}
     loadPhotoIntoCache(id, function(data){
-      if(data)img.src=data;
+      if(data){
+        // find all imgs with this id and update them
+        document.querySelectorAll("img[data-photoid='"+id+"']").forEach(function(el){
+          el.src=data;
+        });
+      }
     });
   });
 }
@@ -482,7 +488,10 @@ function importData(e){
       var dAdded=0;
       diaryData.forEach(function(d){if(dates.indexOf(d.date)<0){diaries.push(d);dAdded++;}});
       persist();persistDiary();openDB(function(){
-  preloadAllPhotos(function(){render();});
+  preloadAllPhotos(function(){
+    render();
+    loadPhotosInPage();
+  });
 });
 
 function preloadAllPhotos(cb){
