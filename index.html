@@ -482,10 +482,23 @@ function importData(e){
       var dAdded=0;
       diaryData.forEach(function(d){if(dates.indexOf(d.date)<0){diaries.push(d);dAdded++;}});
       persist();persistDiary();openDB(function(){
-  render();
-  setTimeout(loadPhotosInPage, 100);
-  setTimeout(loadPhotosInPage, 500);
+  preloadAllPhotos(function(){render();});
 });
+
+function preloadAllPhotos(cb){
+  var ids=[];
+  cats.forEach(function(c){(c.photos||[]).forEach(function(p){if(isPhotoId(p)&&!photoCache[p])ids.push(p);});});
+  diaries.forEach(function(d){(d.photos||[]).forEach(function(p){if(isPhotoId(p)&&!photoCache[p])ids.push(p);});});
+  if(!ids.length){cb();return;}
+  var done=0;
+  ids.forEach(function(id){
+    getPhoto(id,function(data){
+      if(data)photoCache[id]=data;
+      done++;
+      if(done===ids.length)cb();
+    });
+  });
+}
       alert(added+"匹・日記"+dAdded+"件を追加しました！");
     }catch(err){alert("読み込みに失敗しました："+err.message);}
   };
@@ -853,8 +866,10 @@ function cardHtml(c){
   var html="<div class='cat-card' onclick='openDetail("+idx+")'>";
   html+="<div class='cat-card-photo'>";
   if(mainPhoto){
-    if(isPhotoId(mainPhoto)){html+="<img data-photoid='"+mainPhoto+"' src=''>";}
-    else{html+="<img src='"+mainPhoto+"'>";}
+    if(isPhotoId(mainPhoto)){
+      var cachedSrc=photoCache[mainPhoto]||"";
+      html+="<img data-photoid='"+mainPhoto+"' src='"+cachedSrc+"'>";
+    }else{html+="<img src='"+mainPhoto+"'>";}
   }else{html+="🐱";}
   if(c.neutered)html+="<span class='badge-neu'>去勢済</span>";
   if(sl)html+="<span class='badge-seen' style='background:"+sl.color+"'>"+sl.text+"</span>";
