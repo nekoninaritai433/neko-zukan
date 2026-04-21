@@ -395,16 +395,16 @@ function isPhotoId(s){return s&&typeof s==="string"&&s.indexOf("photo_")===0;}
 
 function loadPhotosInPage(){
   document.querySelectorAll("img[data-photoid]").forEach(function(img){
-    var id = img.getAttribute("data-photoid");
+    var id=img.getAttribute("data-photoid");
     if(!id)return;
-    if(photoCache[id]){img.src=photoCache[id];return;}
-    getPhoto(id, function(data){
-      if(data){
-        document.querySelectorAll("img[data-photoid='"+id+"']").forEach(function(el){
-          el.src=data;
-        });
-      }
-    });
+    if(photoCache[id]&&img.src!==photoCache[id]){img.src=photoCache[id];return;}
+    if(!photoCache[id]){
+      getPhoto(id,function(data){
+        if(data){
+          document.querySelectorAll("img[data-photoid='"+id+"']").forEach(function(el){el.src=data;});
+        }
+      });
+    }
   });
 }
 
@@ -472,7 +472,6 @@ function importData(e){
       persist();persistDiary();openDB(function(){
   preloadAllPhotos(function(){
     render();
-    loadPhotosInPage();
   });
 });
 
